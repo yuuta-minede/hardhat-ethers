@@ -6,10 +6,10 @@
 import { ethers } from "hardhat";
 
 async function main() {
-  const MyNFT = await ethers.getContractFactory('MyNFT');
-  const nft = await MyNFT.deploy();
-  await nft.deployed();
-  console.log('MyNFT deployed to:', nft.address);
+  const OriginToken = await ethers.getContractFactory('OriginToken');
+  const org = await OriginToken.deploy();
+  await org.deployed();
+  console.log('OriginToken deployed to:', org.address);
 }
 
 main().catch((error) => {
