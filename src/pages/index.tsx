@@ -2,36 +2,46 @@ import React, {useState} from 'react';
 import Head from 'next/head'
 import styles from '../styles/Home.module.css'
 import { ethers } from 'ethers'
-// import  ContractJSON  from '../contract/abi/abi.json'
-// import Addresses from '../contract/address/addresses'
+import  ContractJSON  from '../contract/abi/abi.json'
+import Addresses from '../contract/address/addresses'
 
 declare let window: any;
 
 export default function Home() {
 
-  // const contractAddress = Addresses.address
-  // const ContractABI = ContractJSON
+  const contractAddress = Addresses.address
+  const ContractABI = ContractJSON.abi
+
   const [defaultAccount, setDefaultAccount] = useState('connect Wallet')
+
   const accountChangedHandler = (myAccount) => {
     setDefaultAccount(myAccount);
   }
 
+  const getCurrentValue = async (): Promise<number> => {
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    let balance = await provider.getBalance("ethers.eth")
+    let balanceNumber = Number(ethers.utils.formatEther(balance))
+    return balanceNumber
+  }
+  
   const ConnectMask = async (): Promise<boolean> => {
     try {
       await window.ethereum.request({ method: "eth_requestAccounts" }).then(result => {
         accountChangedHandler(result[0])
+        getCurrentValue()
       })
     } catch (e: any){
         return false
     }
   }
 
-  // const getCurrentValue = async (): Promise<number> => {
-  //   const provider = new ethers.providers.JsonRpcProvider();
-  //   let value = await provider.getBalance("ethers.eth")
-  //   let valueNumber = Number(ethers.utils.formatEther(value))
-  //   return valueNumber
-  // }
+  const mintToken = async (): Promise<void> => {
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = await provider.getSigner(0);
+    const contract = new ethers.Contract(contractAddress, ContractABI, signer)
+    contract.mint(signer,1)
+  }
 
   return (
     <div className={styles.container}>
@@ -42,7 +52,7 @@ export default function Home() {
       </Head>
 
       <header>
-        {/* <p>{getCurrentValue}eth</p> */}
+        <p>{getCurrentValue}eth</p>
         <p>{defaultAccount}</p>
         <button onClick={ConnectMask}>connect</button>
       </header>
@@ -51,7 +61,7 @@ export default function Home() {
         <h1 className={styles.title}>
           Welcome to <a href="https://nextjs.org">Next.js!</a>
         </h1>
-
+        <button onClick={mintToken}>mint</button>
         <div className={styles.grid}>
           <a href="https://nextjs.org/docs" className={styles.card}>
             <h2>Documentation &rarr;</h2>
