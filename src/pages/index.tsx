@@ -2,9 +2,10 @@ import React, {useState} from 'react';
 import Head from 'next/head'
 import styles from '../styles/Home.module.css'
 import { ethers } from 'ethers'
-import  ContractJSON  from '../contract/abi/abi.json'
+import ContractJSON from '../contract/abi/abi.json'
 import Addresses from '../contract/address/addresses'
 
+// 応急措置
 declare let window: any;
 
 export default function Home() {
@@ -12,35 +13,43 @@ export default function Home() {
   const contractAddress = Addresses.address
   const ContractABI = ContractJSON.abi
 
-  const [defaultAccount, setDefaultAccount] = useState('connect Wallet')
+  // ローカル接続
+  let network = 'http://localhost:8545'
+  let provider = ethers.getDefaultProvider(network)
 
-  const accountChangedHandler = (myAccount) => {
+  const [defaultAccount, setDefaultAccount] = useState('connect Wallet')
+  const [balance, setBalance] = useState(null)
+
+  const accountChangedHandler = (myAccount:string) => {
     setDefaultAccount(myAccount);
   }
 
-  const getCurrentValue = async (): Promise<number> => {
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    let balance = await provider.getBalance("ethers.eth")
-    let balanceNumber = Number(ethers.utils.formatEther(balance))
-    return balanceNumber
+  const getCurrentValue = async (myAccount): Promise<void> => {
+    let balance = await provider.getBalance(myAccount)
+    let balanceNumber = ethers.utils.formatEther(balance)
+    setBalance(balanceNumber)
   }
-  
+
   const ConnectMask = async (): Promise<boolean> => {
     try {
       await window.ethereum.request({ method: "eth_requestAccounts" }).then(result => {
+        // console.log(result[0])
         accountChangedHandler(result[0])
-        getCurrentValue()
+        getCurrentValue(result[0])
       })
-    } catch (e: any){
+    } catch (error: any) {
+        console.log(error)
         return false
     }
   }
 
   const mintToken = async (): Promise<void> => {
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    const signer = await provider.getSigner(0);
+    const provider = await new ethers.providers.Web3Provider(window.ethereum);
+    await provider.send("eth_requestAccounts", []);
+    const signer = provider.getSigner();
+    console.log(signer._address)
     const contract = new ethers.Contract(contractAddress, ContractABI, signer)
-    contract.mint(signer,1)
+    await contract.mint(signer,1)
   }
 
   return (
@@ -52,7 +61,7 @@ export default function Home() {
       </Head>
 
       <header>
-        <p>{getCurrentValue}eth</p>
+        <p>{balance}eth</p>
         <p>{defaultAccount}</p>
         <button onClick={ConnectMask}>connect</button>
       </header>
