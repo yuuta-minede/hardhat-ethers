@@ -33,7 +33,6 @@ export default function Home() {
   const ConnectMask = async (): Promise<boolean> => {
     try {
       await window.ethereum.request({ method: "eth_requestAccounts" }).then(result => {
-        // console.log(result[0])
         accountChangedHandler(result[0])
         getCurrentValue(result[0])
       })
@@ -44,12 +43,15 @@ export default function Home() {
   }
 
   const mintToken = async (): Promise<void> => {
-    const provider = await new ethers.providers.Web3Provider(window.ethereum);
-    await provider.send("eth_requestAccounts", []);
-    const signer = provider.getSigner();
-    console.log(signer._address)
+    const providers = await new ethers.providers.Web3Provider(window.ethereum);
+    // await provider.send("eth_requestAccounts", []);
+
+    const signer = await providers.getSigner(0);
+    // console.log(contractAddress)
+    // console.log(ContractABI)
+    await console.log(signer._address)
     const contract = new ethers.Contract(contractAddress, ContractABI, signer)
-    await contract.mint(signer,1)
+    await contract.mint(100000000000000) //仮
   }
 
   return (
@@ -67,10 +69,10 @@ export default function Home() {
       </header>
 
       <main className={styles.main}>
+        <button onClick={mintToken}>mint</button>
         <h1 className={styles.title}>
           Welcome to <a href="https://nextjs.org">Next.js!</a>
         </h1>
-        <button onClick={mintToken}>mint</button>
         <div className={styles.grid}>
           <a href="https://nextjs.org/docs" className={styles.card}>
             <h2>Documentation &rarr;</h2>
